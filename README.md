@@ -14,6 +14,8 @@ npm install
 ./spacebar-control.sh
 ```
 
+**Note:** The scripts automatically detect whether your system uses `docker compose` (v2) or `docker-compose` (v1) and will use the appropriate command.
+
 ### 2. Using the Control Panel
 From the control panel menu:
 1. **Option 1**: Configure network (sets up config with your Mac's IP)

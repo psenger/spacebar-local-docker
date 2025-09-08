@@ -3,6 +3,19 @@
 echo "🚀 Starting Spacebar Server..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
+# Detect Docker Compose command
+if docker compose version >/dev/null 2>&1; then
+    DOCKER_COMPOSE="docker compose"
+elif docker-compose --version >/dev/null 2>&1; then
+    DOCKER_COMPOSE="docker-compose"
+else
+    echo "❌ Docker Compose is not installed!"
+    echo "Please install Docker Compose to continue."
+    exit 1
+fi
+
+echo "✓ Using: $DOCKER_COMPOSE"
+
 # Check if config exists
 if [ ! -f "config/config.json" ]; then
     echo "⚠️  Config not found. Running setup first..."
@@ -10,10 +23,10 @@ if [ ! -f "config/config.json" ]; then
 fi
 
 # Stop any existing container
-docker-compose down 2>/dev/null
+$DOCKER_COMPOSE down 2>/dev/null
 
 # Start in detached mode
-docker-compose up -d
+$DOCKER_COMPOSE up -d
 
 # Wait for container to start
 echo "⏳ Waiting for server to start..."
@@ -41,5 +54,5 @@ if docker ps | grep -q spacebar; then
 else
     echo "❌ Failed to start Spacebar"
     echo "Checking docker-compose logs..."
-    docker-compose logs
+    $DOCKER_COMPOSE logs
 fi

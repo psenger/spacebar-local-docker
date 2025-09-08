@@ -166,7 +166,7 @@ while true; do
             echo -e "\n${RED}⚠️  WARNING: This will delete all data!${NC}"
             read -p "Are you sure? (yes/no): " confirm
             if [ "$confirm" = "yes" ]; then
-                docker-compose down -v
+                $DOCKER_COMPOSE down -v
                 rm -rf data/ files/ credentials.json
                 echo -e "${GREEN}✅ All data cleaned${NC}"
             else
