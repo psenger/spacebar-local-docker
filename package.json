@@ -1,0 +1,25 @@
+{
+  "name": "spacebar-server-setup",
+  "version": "1.0.0",
+  "description": "Spacebar server setup with bots and management tools",
+  "main": "example-bot.js",
+  "scripts": {
+    "setup": "node setup-users-and-bots.js",
+    "bot": "node example-bot.js",
+    "start": "./run-spacebar.sh",
+    "control": "./spacebar-control.sh"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "spacebar",
+    "discord",
+    "chat",
+    "server",
+    "bot"
+  ],
+  "author": "",
+  "license": "MIT"
+}
