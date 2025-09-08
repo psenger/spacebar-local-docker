@@ -2,6 +2,7 @@ __pycache__/
 __pypackages__/
 !config/.gitkeep
 !data/.gitkeep
+!certs/.gitkeep
 !files/.gitkeep
 .android/
 .build/
@@ -147,6 +148,7 @@ eggs/
 env.bak/
 env/
 ENV/
+certs/*
 files/*
 htmlcov/
 instance/
