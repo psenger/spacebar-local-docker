@@ -1,5 +1,8 @@
 __pycache__/
 __pypackages__/
+!config/.gitkeep
+!data/.gitkeep
+!files/.gitkeep
 .android/
 .build/
 .cache
@@ -120,11 +123,13 @@ build/Release
 celerybeat-schedule
 celerybeat.pid
 cmake-build-*/
+config/*
 cover/
 coverage
 coverage.xml
 coverage/
 cython_debug/
+data/*
 db.sqlite3
 db.sqlite3-journal
 DerivedData/
@@ -142,6 +147,7 @@ eggs/
 env.bak/
 env/
 ENV/
+files/*
 htmlcov/
 instance/
 ipython_config.py
