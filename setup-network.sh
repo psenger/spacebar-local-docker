@@ -9,26 +9,36 @@ if [ -z "$IP" ]; then
 fi
 
 echo "🌐 Using IP address: $IP"
-echo "Other devices on your network will connect to: http://$IP:3001"
+echo "Other devices on your network will connect to: https://$IP:443"
 
-# Create config directory if it doesn't exist
-mkdir -p config
+# Create config and certs directories if they don't exist
+mkdir -p config certs
 
-# Generate the config.json with the network IP
+# Generate self-signed certificate for Spacebar server
+CERT_FILE="./certs/fullchain.pem"
+KEY_FILE="./certs/privkey.pem"
+ 
+if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
+    echo "🔐 Generating self-signed TLS certificate..."
+    openssl req -x509 -newkey rsa:4096 -keyout "$KEY_FILE" -out "$CERT_FILE" -days 365 -nodes -subj "/CN=$IP"
+    echo "✅ Certificate generated at $CERT_FILE"
+fi
+
+# Generate the config.json with the network IP, using HTTPS/WSS
 cat > config/config.json << EOF
 {
   "api": {
-    "endpointPublic": "http://$IP:3001/api",
-    "endpointPrivate": "http://localhost:3001/api",
-    "port": 3001
+    "endpointPublic": "https://$IP:443/api",
+    "endpointPrivate": "https://localhost:443/api",
+    "port": 443
   },
   "gateway": {
-    "endpointPublic": "ws://$IP:3001",
-    "endpointPrivate": "ws://localhost:3001"
+    "endpointPublic": "wss://$IP:443",
+    "endpointPrivate": "wss://localhost:443"
   },
   "cdn": {
-    "endpointPublic": "http://$IP:3001/cdn",
-    "endpointPrivate": "http://localhost:3001/cdn"
+    "endpointPublic": "https://$IP:443/cdn",
+    "endpointPrivate": "https://localhost:443/cdn"
   },
   "register": {
     "email": false,
@@ -110,6 +120,10 @@ cat > config/config.json << EOF
     "exposedHeaders": "*",
     "maxAge": 86400,
     "optionsSuccessStatus": 200
+  },
+  "tls": {
+    "cert": "$CERT_FILE",
+    "key": "$KEY_FILE"
   }
 }
 EOF
@@ -118,7 +132,8 @@ echo "✅ Configuration created with IP: $IP"
 echo ""
 echo "📝 Connection Info for Clients & Bots:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Server URL: http://$IP:3001"
-echo "API URL:    http://$IP:3001/api"
-echo "Gateway:    ws://$IP:3001"
+echo "Server URL: https://$IP:443"
+echo "API URL:    https://$IP:443/api"
+echo "Gateway:    wss://$IP:443"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+

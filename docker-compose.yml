@@ -3,13 +3,20 @@ version: "3.9"
 services:
   spacebar-server:
     container_name: spacebar
-    image: ghcr.io/spacebarchat/server:latest
+    image: spacebarchat/server:latest-sqlite
+    platform: linux/amd64
     ports:
-      - "3001:3001"
+      - "443:443"   # expose HTTPS
     environment:
-      - DATABASE=sqlite://database.db
-      - PORT=3001
+      - DATABASE=/exec/persistent/database/database.db
+      - STORAGE_PROVIDER=file
+      - STORAGE_LOCATION=/exec/persistent/storage/
+      - PORT=443
+      - TLS_AUTOGEN=true     # <-- tells Spacebar to auto-generate a self-signed cert
+      - ENABLE_TLS=true
     volumes:
-      - ./data:/app/data
+      - ./data:/exec/persistent/database
+      - ./storage:/exec/persistent/storage
       - ./config:/app/config
-      - ./files:/app/files
+      - ./certs:/app/config/certs
+
