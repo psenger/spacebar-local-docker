@@ -15,8 +15,8 @@ echo "Other devices on your network will connect to: https://$IP:443"
 mkdir -p config certs
 
 # Generate self-signed certificate for Spacebar server
-CERT_FILE="./certs/fullchain.pem"
-KEY_FILE="./certs/privkey.pem"
+CERT_FILE="./certs/cert.pem"
+KEY_FILE="./certs/key.pem"
  
 if [ ! -f "$CERT_FILE" ] || [ ! -f "$KEY_FILE" ]; then
     echo "🔐 Generating self-signed TLS certificate..."

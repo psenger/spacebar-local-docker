@@ -29,7 +29,7 @@ function makeRequest(method, path, data = null, token = null) {
             },
             rejectUnauthorized: false // Allow self-signed certs
         };
-        
+
         if (token) {
             options.headers['Authorization'] = token;
         }
@@ -51,7 +51,7 @@ function makeRequest(method, path, data = null, token = null) {
                     if (res.statusCode >= 200 && res.statusCode < 300) {
                         resolve(body);
                     } else {
-                        reject({ message: body, statusCode: res.statusCode });
+                        reject({message: body, statusCode: res.statusCode});
                     }
                 }
             });
@@ -68,14 +68,18 @@ function makeRequest(method, path, data = null, token = null) {
 }
 
 // Create users
-async function createUser(username, password) {
+async function createUser(username, email, password) {
     try {
         const response = await makeRequest('POST', '/api/auth/register', {
-            username: username,
-            email: `${username}@example.com`,
-            password: password,
-            consent: true,
-            date_of_birth: '2000-01-01'
+            username,                 // minLength 2
+            password,                 // minLength 1, maxLength 72
+            consent: true,                      // required
+            email,
+            fingerprint: 'string',
+            date_of_birth: '2000-01-01',
+            promotional_email_opt_in: false,
+            unique_username_registration: false,
+            global_name: username
         });
         console.log(`✅ Created user: ${username}`);
         return response;
@@ -90,30 +94,25 @@ async function createUser(username, password) {
 }
 
 // Login to get token
-async function login(username, password) {
+async function login(username, email, password) {
     console.log(`   Attempting to login as ${username}...`);
-    
-    const loginAttempts = [
-        { name: 'login field', data: { login: username, password: password } },
-        { name: 'login with email format', data: { login: `${username}@example.com`, password: password } },
-        { name: 'email field', data: { email: `${username}@example.com`, password: password } },
-        { name: 'username field', data: { username: username, password: password } },
-        { name: 'login with undelete', data: { login: username, password: password, undelete: false } }
-    ];
-    
-    for (let attempt of loginAttempts) {
-        try {
-            console.log(`   Trying format: ${attempt.name}`);
-            const response = await makeRequest('POST', '/api/auth/login', attempt.data);
-            console.log(`✅ Logged in as: ${username} (using ${attempt.name})`);
-            return response.token;
-        } catch (error) {
-            const errorMsg = error.message || error.errors?.[0]?.message || 'Unknown error';
-            console.log(`   ❌ Failed with ${attempt.name}: ${errorMsg}`);
-        }
+
+    try {
+        const response = await makeRequest('POST', '/api/auth/login',{
+            login: email,
+            password,
+            undelete: false,
+             captcha_key: 'string',
+            login_source:"string",
+            gift_code_sku_id:"string"
+        });
+        console.log(`✅ Logged in as: ${username}`);
+        return response.token;
+    } catch (error) {
+        const errorMsg = error.message || error.errors?.[0]?.message || 'Unknown error';
+        console.log(`❌ Failed with error: ${errorMsg}`);
     }
-    
-    console.log(`❌ All login formats failed for ${username}`);
+
     return null;
 }
 
@@ -122,11 +121,12 @@ async function createBot(token, botName, description) {
     try {
         const response = await makeRequest('POST', '/api/applications', {
             name: botName,
-            description: description,
-            bot_public: true,
-            bot_require_code_grant: false
+            team_id: 'string'
+            // description: description,
+            // bot_public: true,
+            // bot_require_code_grant: false
         }, token);
-        
+
         console.log(`✅ Created bot: ${botName}`);
         console.log(`   Token: ${response.bot?.token || 'Check response'}`);
         return response;
@@ -139,7 +139,7 @@ async function createBot(token, botName, description) {
 // Create a guild (server)
 async function createGuild(token, guildName) {
     try {
-        const response = await makeRequest('POST', '/api/guilds', { name: guildName }, token);
+        const response = await makeRequest('POST', '/api/guilds', {name: guildName}, token);
         console.log(`✅ Created guild: ${guildName}`);
         return response;
     } catch (error) {
@@ -152,50 +152,50 @@ async function createGuild(token, guildName) {
 async function setup() {
     console.log('\n📝 Creating Users...');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    
-    await createUser('admin', 'AdminPass123!');
-    await createUser('user1', 'UserPass123!');
-    await createUser('user2', 'UserPass123!');
-    await createUser('user3', 'UserPass123!');
-    
+
+    await createUser('admin', `admin@monkeygoboom.com`, 'AdminPass123!');
+    await createUser('user1', `user1@monkeygoboom.com`, 'UserPass123!');
+    await createUser('user2', `user2@monkeygoboom.com`, 'UserPass123!');
+    await createUser('user3', `user3@monkeygoboom.com`, 'UserPass123!');
+
     console.log('\n🔐 Logging in as admin...');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    const adminToken = await login('admin', 'AdminPass123!');
-    
+    const adminToken = await login('admin', `admin@monkeygoboom.com`, 'AdminPass123!');
+
     if (!adminToken) {
         console.log('❌ Could not login as admin. Exiting...');
         return;
     }
-    
+
     console.log('\n🤖 Creating Bots...');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     const bots = [];
-    
+
     const botNames = ['WelcomeBot', 'ModeratorBot', 'MusicBot', 'GameBot'];
     for (let name of botNames) {
         const bot = await createBot(adminToken, name, `${name} description`);
         if (bot) bots.push(bot);
     }
-    
+
     console.log('\n🏰 Creating Guild...');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     const guild = await createGuild(adminToken, 'My Spacebar Server');
-    
+
     // Save credentials
     const credentials = {
         server: SERVER_URL,
-        admin: { username: 'admin', password: 'AdminPass123!', token: adminToken },
+        admin: {username: 'admin', email: `admin@monkeygoboom.com`, password: 'AdminPass123!', token: adminToken},
         users: [
-            { username: 'user1', password: 'UserPass123!' },
-            { username: 'user2', password: 'UserPass123!' },
-            { username: 'user3', password: 'UserPass123!' }
+            {username: 'user1', email: `user1@monkeygoboom.com`, password: 'UserPass123!'},
+            {username: 'user2', email: `user2@monkeygoboom.com`, password: 'UserPass123!'},
+            {username: 'user3', email: `user3@monkeygoboom.com`, password: 'UserPass123!'}
         ],
-        bots: bots.map(bot => ({ name: bot.name, id: bot.id, token: bot.bot?.token })).filter(b => b.token),
+        bots: bots.map(bot => ({name: bot.name, id: bot.id, token: bot.bot?.token})).filter(b => b.token),
         guild: guild
     };
-    
+
     fs.writeFileSync('credentials.json', JSON.stringify(credentials, null, 2));
-    
+
     console.log('\n✅ Setup Complete!');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📄 Credentials saved to: credentials.json');

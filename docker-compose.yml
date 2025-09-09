@@ -1,22 +1,40 @@
-version: "3.9"
-
 services:
-  spacebar-server:
-    container_name: spacebar
-    image: spacebarchat/server:latest-sqlite
+  nginx-proxy:
+    container_name: nginx-proxy
+    image: nginx:alpine
     platform: linux/amd64
     ports:
-      - "443:443"   # expose HTTPS
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs/cert.pem:/etc/nginx/ssl/cert.pem:ro
+      - ./certs/key.pem:/etc/nginx/ssl/key.pem:ro
+    restart: unless-stopped
+    networks:
+      - spacebar-network
+    depends_on:
+      - spacebar-server
+
+  spacebar-server:
+    container_name: spacebar-server
+    image: spacebarchat/server:latest-sqlite
+    restart: unless-stopped
+    platform: linux/amd64
+    ports:
+      - "3001:3001"
     environment:
       - DATABASE=/exec/persistent/database/database.db
       - STORAGE_PROVIDER=file
       - STORAGE_LOCATION=/exec/persistent/storage/
-      - PORT=443
-      - TLS_AUTOGEN=true     # <-- tells Spacebar to auto-generate a self-signed cert
-      - ENABLE_TLS=true
+      - PORT=3001
     volumes:
       - ./data:/exec/persistent/database
       - ./storage:/exec/persistent/storage
       - ./config:/app/config
-      - ./certs:/app/config/certs
+    networks:
+      - spacebar-network
 
+networks:
+  spacebar-network:
+    driver: bridge
